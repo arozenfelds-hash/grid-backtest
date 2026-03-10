@@ -3,11 +3,11 @@ set -e
 
 echo "=== Grid Bot Backtester — Deploy ==="
 
-# Install system deps if needed
-if ! command -v python3 &>/dev/null; then
-    echo "Installing Python3..."
-    apt-get update && apt-get install -y python3 python3-pip python3-venv
-fi
+# Install system deps
+echo "Installing system dependencies..."
+apt-get update -qq
+apt-get install -y -qq python3 python3-pip python3-venv python3.12-venv 2>/dev/null || \
+apt-get install -y -qq python3 python3-pip python3-venv
 
 # Clone or update repo
 REPO_DIR="/opt/grid-backtest"
