@@ -296,7 +296,8 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
 }}
 
 /* Hide streamlit defaults */
-#MainMenu, footer, header {{ visibility: hidden; }}
+#MainMenu, footer {{ visibility: hidden; }}
+header[data-testid="stHeader"] {{ background: transparent !important; }}
 .block-container {{ padding-top: 2rem !important; padding-bottom: 0 !important; }}
 </style>
 """, unsafe_allow_html=True)
