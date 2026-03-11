@@ -511,7 +511,8 @@ _sell_price_hi = final_price + _sell_levels * p_step
 _sell_range_pct = (_sell_price_hi - final_price) / final_price * 100 if final_price > 0 else 0
 _total_range_pct = _buy_range_pct + _sell_range_pct
 
-st.markdown("")
+st.markdown('<hr class="noir">', unsafe_allow_html=True)
+st.warning("DEBUG: Working Range section is executing")
 st.markdown(f'{_section("Working Range", C_BLUE)}', unsafe_allow_html=True)
 r1, r2, r3, r4, r5, r6 = st.columns(6, gap="small")
 r1.markdown(_kpi("Buy Levels",   str(_buy_levels),                C_GREEN),  unsafe_allow_html=True)
