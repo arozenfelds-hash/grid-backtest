@@ -493,6 +493,46 @@ if gm.get("skipped_no_balance", 0) > 0:
     )
 
 
+# ── Working Range ────────────────────────────────────────────────────────
+
+# Buy side: how many levels down from starting price the USDT can cover
+_buy_levels = int(p_start_cap // p_order_size) if p_order_size > 0 else 0
+_buy_price_low = max(p_min_price, final_price - _buy_levels * p_step)
+_buy_range_pct = (final_price - _buy_price_low) / final_price * 100 if final_price > 0 else 0
+
+# Sell side: perps use USDT, spot uses token balance
+if p_mode_val == "spot":
+    # Each sell level needs order_size_usd / level_price tokens (approximate with current price)
+    _sell_levels = int(p_initial_tokens * final_price // p_order_size) if p_order_size > 0 and final_price > 0 else 0
+else:
+    _sell_levels = _buy_levels  # perps: symmetric, same USDT funds both sides
+
+_sell_price_hi = final_price + _sell_levels * p_step
+_sell_range_pct = (_sell_price_hi - final_price) / final_price * 100 if final_price > 0 else 0
+_total_range_pct = _buy_range_pct + _sell_range_pct
+
+st.markdown("")
+st.markdown(f'{_section("Working Range", C_BLUE)}', unsafe_allow_html=True)
+r1, r2, r3, r4, r5, r6 = st.columns(6, gap="small")
+r1.markdown(_kpi("Buy Levels",   str(_buy_levels),                C_GREEN),  unsafe_allow_html=True)
+r2.markdown(_kpi("Buy Floor",    f"${_buy_price_low:,.4g}",       C_GREEN),  unsafe_allow_html=True)
+r3.markdown(_kpi("Buy Coverage", f"{_buy_range_pct:.1f}%",        C_GREEN),  unsafe_allow_html=True)
+r4.markdown(_kpi("Sell Levels",  str(_sell_levels),                C_RED),    unsafe_allow_html=True)
+r5.markdown(_kpi("Sell Ceiling", f"${_sell_price_hi:,.4g}",        C_RED),    unsafe_allow_html=True)
+r6.markdown(_kpi("Total Range",  f"{_total_range_pct:.1f}%",      C_BLUE),   unsafe_allow_html=True)
+
+if p_mode_val == "spot":
+    st.markdown(
+        f'<div class="stat-panel" style="margin-top:6px;font-size:0.75rem">'
+        f'<div class="stat-row"><span class="stat-k">USDT funds buy side</span>'
+        f'<span class="stat-v" style="color:{C_GREEN}">${p_start_cap:,.2f} → {_buy_levels} levels</span></div>'
+        f'<div class="stat-row"><span class="stat-k">{coin_sym} funds sell side</span>'
+        f'<span class="stat-v" style="color:{C_RED}">{p_initial_tokens:g} {coin_sym} → {_sell_levels} levels</span></div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
 # ── Price Chart ──────────────────────────────────────────────────────────────
 
 st.markdown('<hr class="noir">', unsafe_allow_html=True)
