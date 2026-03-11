@@ -30,6 +30,8 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+st.toast("CODE VERSION: d2b53bd — if you see this, the server has the latest code")
+
 # ── Color system ──────────────────────────────────────────────────────────────
 C_BG       = "#06080d"
 C_SURFACE  = "#0c1018"
