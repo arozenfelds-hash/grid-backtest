@@ -2,7 +2,7 @@
 app.py
 ======
 Grid Bot Backtester — Streamlit Dashboard.
-Terminal Noir aesthetic — Bloomberg meets cyberpunk.
+Cicada corporate design with light/dark themes.
 """
 
 from __future__ import annotations
@@ -24,91 +24,132 @@ from data_loader import (
 
 # ── Page setup ────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="GRID // Backtester",
+    page_title="Cicada Grid Backtester",
     page_icon="⬡",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-st.toast("CODE VERSION: d2b53bd — if you see this, the server has the latest code")
+# ── Theme toggle ─────────────────────────────────────────────────────────────
+if "theme" not in st.session_state:
+    st.session_state.theme = "dark"
+IS_DARK = st.session_state.theme == "dark"
 
-# ── Color system ──────────────────────────────────────────────────────────────
-C_BG       = "#06080d"
-C_SURFACE  = "#0c1018"
-C_BORDER   = "#1a1f2e"
-C_BORDER2  = "#252b3b"
-C_TEXT     = "#c8d1dc"
-C_MUTED    = "#5a6578"
-C_GREEN    = "#00e68a"
-C_RED      = "#ff3b5c"
-C_CYAN     = "#00d4ff"
-C_PURPLE   = "#a855f7"
-C_AMBER    = "#f59e0b"
-C_BLUE     = "#3b82f6"
+# ── Color system — Cicada brand ──────────────────────────────────────────────
+C_PRIMARY  = "#005BF3"  # Cicada Blue
+
+if IS_DARK:
+    C_BG       = "#0b0f1a"
+    C_SURFACE  = "#111827"
+    C_BORDER   = "#1e293b"
+    C_BORDER2  = "#334155"
+    C_TEXT     = "#e2e8f0"
+    C_MUTED    = "#64748b"
+    C_GREEN    = "#10b981"
+    C_RED      = "#ef4444"
+    C_CYAN     = C_PRIMARY
+    C_PURPLE   = "#7c3aed"
+    C_AMBER    = "#f59e0b"
+    C_BLUE     = C_PRIMARY
+    _PLOT_BG     = "rgba(11,15,26,0.6)"
+    _LEGEND_BG   = "rgba(17,24,39,0.9)"
+    _GRID_CLR    = "rgba(30,41,59,0.6)"
+    _SIDEBAR_BG  = "linear-gradient(180deg, #0d1117 0%, #111827 50%, #0d1117 100%)"
+    _INPUT_BG    = "rgba(17,24,39,0.8)"
+    _KPI_BG      = "linear-gradient(135deg, rgba(17,24,39,0.95), rgba(30,41,59,0.9))"
+    _HEADER_BG   = "linear-gradient(135deg, rgba(0,91,243,0.06) 0%, rgba(124,58,237,0.06) 50%, rgba(16,185,129,0.04) 100%)"
+    _STAT_BG     = "linear-gradient(135deg, rgba(17,24,39,0.9), rgba(30,41,59,0.85))"
+    _GLOW_A      = "radial-gradient(ellipse 80% 50% at 20% 0%, rgba(0,91,243,0.04) 0%, transparent 60%)"
+    _GLOW_B      = "radial-gradient(ellipse 60% 40% at 80% 100%, rgba(124,58,237,0.03) 0%, transparent 60%)"
+    _HEAD_CLR    = "#eef1f6"
+    _SEC_CLR     = "#dde1e8"
+else:
+    C_BG       = "#f8fafc"
+    C_SURFACE  = "#ffffff"
+    C_BORDER   = "#e2e8f0"
+    C_BORDER2  = "#cbd5e1"
+    C_TEXT     = "#1e293b"
+    C_MUTED    = "#64748b"
+    C_GREEN    = "#059669"
+    C_RED      = "#dc2626"
+    C_CYAN     = C_PRIMARY
+    C_PURPLE   = "#7c3aed"
+    C_AMBER    = "#d97706"
+    C_BLUE     = C_PRIMARY
+    _PLOT_BG     = "rgba(248,250,252,0.6)"
+    _LEGEND_BG   = "rgba(255,255,255,0.95)"
+    _GRID_CLR    = "rgba(226,232,240,0.8)"
+    _SIDEBAR_BG  = "linear-gradient(180deg, #f1f5f9 0%, #ffffff 50%, #f1f5f9 100%)"
+    _INPUT_BG    = "rgba(248,250,252,0.9)"
+    _KPI_BG      = "linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95))"
+    _HEADER_BG   = "linear-gradient(135deg, rgba(0,91,243,0.04) 0%, rgba(124,58,237,0.04) 50%, rgba(5,150,105,0.03) 100%)"
+    _STAT_BG     = "linear-gradient(135deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9))"
+    _GLOW_A      = "none"
+    _GLOW_B      = "none"
+    _HEAD_CLR    = "#0f172a"
+    _SEC_CLR     = "#1e293b"
 
 # ── Chart theme ──────────────────────────────────────────────────────────────
 CHART_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(6,8,13,0.6)",
-    font=dict(family="DM Mono, monospace", color=C_MUTED, size=10),
+    plot_bgcolor=_PLOT_BG,
+    font=dict(family="Lato, sans-serif", color=C_MUTED, size=10),
     margin=dict(l=0, r=12, t=28, b=0),
     legend=dict(
-        bgcolor="rgba(12,16,24,0.9)", bordercolor=C_BORDER, borderwidth=1,
+        bgcolor=_LEGEND_BG, bordercolor=C_BORDER, borderwidth=1,
         orientation="h", x=0, y=1.02, font=dict(size=9, color=C_MUTED),
     ),
 )
-GRID_STYLE = dict(showgrid=True, gridcolor="rgba(26,31,46,0.6)", gridwidth=1,
+GRID_STYLE = dict(showgrid=True, gridcolor=_GRID_CLR, gridwidth=1,
                    zeroline=False)
 
 # ── Global CSS ────────────────────────────────────────────────────────────────
 st.markdown(f"""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@100;300;400;700;900&display=swap');
 
 :root {{
     --bg: {C_BG}; --surface: {C_SURFACE}; --border: {C_BORDER};
     --text: {C_TEXT}; --muted: {C_MUTED};
     --green: {C_GREEN}; --red: {C_RED}; --cyan: {C_CYAN};
     --purple: {C_PURPLE}; --amber: {C_AMBER}; --blue: {C_BLUE};
+    --primary: {C_PRIMARY};
 }}
 
 html, body, [data-testid="stAppViewContainer"],
 [data-testid="stApp"], .main .block-container {{
     background-color: var(--bg) !important;
     color: var(--text);
-    font-family: 'DM Mono', monospace;
+    font-family: 'Lato', sans-serif;
 }}
 
 [data-testid="stAppViewContainer"]::before {{
     content: '';
     position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background:
-        radial-gradient(ellipse 80% 50% at 20% 0%, rgba(0,212,255,0.03) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 40% at 80% 100%, rgba(168,85,247,0.03) 0%, transparent 60%);
+    background: {_GLOW_A}, {_GLOW_B};
 }}
 
 /* Sidebar */
 [data-testid="stSidebar"] {{
-    background: linear-gradient(180deg, #080c14 0%, #0a0e18 50%, #080c14 100%) !important;
+    background: {_SIDEBAR_BG} !important;
     border-right: 1px solid var(--border) !important;
 }}
 [data-testid="stSidebar"] [data-testid="stMarkdown"] h1 {{
-    font-family: 'Outfit', sans-serif !important;
-    font-weight: 800 !important; letter-spacing: -0.03em;
-    background: linear-gradient(135deg, var(--cyan), var(--purple));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    font-family: 'Lato', sans-serif !important;
+    font-weight: 900 !important; letter-spacing: -0.02em;
+    color: var(--primary) !important;
     font-size: 1.5rem !important; margin-bottom: 0 !important;
 }}
 [data-testid="stSidebar"] [data-testid="stMarkdown"] h3 {{
-    font-family: 'Outfit', sans-serif !important;
-    font-weight: 600 !important; letter-spacing: 0.06em;
+    font-family: 'Lato', sans-serif !important;
+    font-weight: 700 !important; letter-spacing: 0.06em;
     text-transform: uppercase; font-size: 0.65rem !important;
     color: var(--muted) !important; margin-bottom: 4px !important;
 }}
 [data-testid="stSidebar"] hr {{ border-color: var(--border) !important; opacity: 0.5; }}
 [data-testid="stSidebar"] label {{
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.75rem !important; color: var(--muted) !important;
+    font-family: 'Lato', sans-serif !important;
+    font-size: 0.8rem !important; color: var(--muted) !important;
 }}
 [data-testid="stSidebar"] .stRadio > div {{
     gap: 0.5rem !important;
@@ -116,16 +157,16 @@ html, body, [data-testid="stAppViewContainer"],
 [data-testid="stSidebar"] .stNumberInput input,
 [data-testid="stSidebar"] .stSelectbox > div > div,
 [data-testid="stSidebar"] .stDateInput input {{
-    background: rgba(12,16,24,0.8) !important;
+    background: {_INPUT_BG} !important;
     border-color: var(--border) !important;
     color: var(--text) !important;
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.8rem !important;
+    font-family: 'Lato', sans-serif !important;
+    font-size: 0.85rem !important;
 }}
 
 /* Main content headings */
 .main h2, .main h3 {{
-    font-family: 'Outfit', sans-serif !important;
+    font-family: 'Lato', sans-serif !important;
     font-weight: 700 !important;
     letter-spacing: -0.02em;
 }}
@@ -142,7 +183,7 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
 
 /* KPI Cards */
 .kpi {{
-    background: linear-gradient(135deg, rgba(12,16,24,0.95), rgba(18,24,36,0.9));
+    background: {_KPI_BG};
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 16px 12px 14px;
@@ -155,28 +196,27 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
 .kpi::before {{
     content: '';
     position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: var(--accent-color, var(--cyan));
+    background: var(--accent-color, var(--primary));
     opacity: 0.8;
 }}
 .kpi-val {{
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Lato', sans-serif;
     font-size: 1.3rem; font-weight: 700;
     line-height: 1.15;
-    color: var(--accent-color, var(--cyan));
-    text-shadow: 0 0 20px color-mix(in srgb, var(--accent-color, var(--cyan)) 30%, transparent);
+    color: var(--accent-color, var(--primary));
 }}
 .kpi-lbl {{
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem; font-weight: 400;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.65rem; font-weight: 400;
     color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     margin-top: 6px;
 }}
 
 /* Header banner */
 .hdr-banner {{
-    background: linear-gradient(135deg, rgba(0,212,255,0.06) 0%, rgba(168,85,247,0.06) 50%, rgba(0,230,138,0.04) 100%);
+    background: {_HEADER_BG};
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px 24px 16px;
@@ -186,20 +226,20 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
 }}
 .hdr-banner::before {{
     content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--cyan), var(--purple), var(--green));
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--purple), var(--green));
 }}
 .hdr-title {{
-    font-family: 'Outfit', sans-serif;
-    font-size: 1.6rem; font-weight: 800;
-    letter-spacing: -0.03em;
-    color: #eef1f6;
+    font-family: 'Lato', sans-serif;
+    font-size: 1.6rem; font-weight: 900;
+    letter-spacing: -0.02em;
+    color: {_HEAD_CLR};
     margin: 0;
 }}
 .hdr-badge {{
     display: inline-block;
-    font-family: 'DM Mono', monospace;
-    font-size: 0.6rem; font-weight: 500;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.6rem; font-weight: 700;
     letter-spacing: 0.08em; text-transform: uppercase;
     padding: 3px 10px;
     border-radius: 4px;
@@ -207,26 +247,26 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
     position: relative; top: -2px;
 }}
 .hdr-badge.perps {{
-    background: rgba(0,212,255,0.12); color: var(--cyan);
-    border: 1px solid rgba(0,212,255,0.25);
+    background: rgba(0,91,243,0.12); color: var(--primary);
+    border: 1px solid rgba(0,91,243,0.25);
 }}
 .hdr-badge.spot {{
     background: rgba(245,158,11,0.12); color: var(--amber);
     border: 1px solid rgba(245,158,11,0.25);
 }}
 .hdr-meta {{
-    font-family: 'DM Mono', monospace;
-    font-size: 0.7rem; color: var(--muted);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.75rem; color: var(--muted);
     margin-top: 8px; line-height: 1.6;
 }}
-.hdr-meta span {{ color: var(--text); font-weight: 500; }}
+.hdr-meta span {{ color: var(--text); font-weight: 700; }}
 
 /* Section headers */
 .sec-hdr {{
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Lato', sans-serif;
     font-weight: 700; font-size: 1.05rem;
     letter-spacing: -0.01em;
-    color: #dde1e8;
+    color: {_SEC_CLR};
     display: flex; align-items: center; gap: 10px;
     margin: 0 0 12px 0;
 }}
@@ -242,7 +282,7 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
 
 /* Stat rows */
 .stat-panel {{
-    background: linear-gradient(135deg, rgba(12,16,24,0.9), rgba(16,20,30,0.85));
+    background: {_STAT_BG};
     border: 1px solid var(--border);
     border-radius: 10px;
     padding: 14px 16px;
@@ -250,21 +290,21 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
 .stat-row {{
     display: flex; justify-content: space-between; align-items: center;
     padding: 5px 0;
-    border-bottom: 1px solid rgba(26,31,46,0.4);
-    font-size: 0.78rem;
+    border-bottom: 1px solid {'rgba(30,41,59,0.4)' if IS_DARK else 'rgba(226,232,240,0.6)'};
+    font-size: 0.8rem;
 }}
 .stat-row:last-child {{ border-bottom: none; }}
 .stat-k {{ color: var(--muted); font-weight: 400; }}
-.stat-v {{ color: var(--text); font-weight: 500; text-align: right; }}
+.stat-v {{ color: var(--text); font-weight: 700; text-align: right; }}
 
 /* Warning bar */
 .warn-bar {{
-    background: rgba(245,158,11,0.08);
-    border: 1px solid rgba(245,158,11,0.2);
+    background: {'rgba(245,158,11,0.08)' if IS_DARK else 'rgba(245,158,11,0.06)'};
+    border: 1px solid {'rgba(245,158,11,0.2)' if IS_DARK else 'rgba(245,158,11,0.3)'};
     border-left: 3px solid var(--amber);
     border-radius: 6px;
     padding: 10px 14px;
-    font-size: 0.78rem; color: var(--amber);
+    font-size: 0.8rem; color: var(--amber);
     margin: 8px 0;
 }}
 
@@ -274,23 +314,30 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
     border-bottom: 1px solid var(--border);
 }}
 .stTabs [data-baseweb="tab"] {{
-    font-family: 'DM Mono', monospace !important;
-    font-size: 0.72rem !important;
+    font-family: 'Lato', sans-serif !important;
+    font-size: 0.75rem !important;
     text-transform: uppercase; letter-spacing: 0.06em;
     color: var(--muted) !important;
     border-bottom: 2px solid transparent;
     padding: 8px 16px !important;
 }}
 .stTabs [aria-selected="true"] {{
-    color: var(--cyan) !important;
-    border-bottom-color: var(--cyan) !important;
-    background: rgba(0,212,255,0.04) !important;
+    color: var(--primary) !important;
+    border-bottom-color: var(--primary) !important;
+    background: {'rgba(0,91,243,0.04)' if IS_DARK else 'rgba(0,91,243,0.06)'} !important;
+}}
+
+/* Theme toggle */
+.theme-toggle {{
+    display: flex; align-items: center; gap: 8px;
+    font-size: 0.75rem; color: var(--muted);
+    margin-bottom: 8px;
 }}
 
 /* Footer */
 .footer {{
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem; color: var(--muted);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.7rem; color: var(--muted);
     text-align: center;
     padding: 24px 0 8px;
     border-top: 1px solid var(--border);
@@ -349,8 +396,20 @@ def run_cached_backtest(
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown("# GRID // Backtester")
+    st.markdown("# Cicada Grid Backtester")
     st.caption("Binance USDM Perpetual Futures")
+
+    # Theme toggle
+    _theme_label = "Dark" if IS_DARK else "Light"
+    if st.toggle(f"{_theme_label} Mode", value=IS_DARK, key="theme_toggle"):
+        if st.session_state.theme != "dark":
+            st.session_state.theme = "dark"
+            st.rerun()
+    else:
+        if st.session_state.theme != "light":
+            st.session_state.theme = "light"
+            st.rerun()
+
     st.markdown("---")
 
     st.markdown("### Trading Mode")
@@ -514,7 +573,6 @@ _sell_range_pct = (_sell_price_hi - final_price) / final_price * 100 if final_pr
 _total_range_pct = _buy_range_pct + _sell_range_pct
 
 st.markdown('<hr class="noir">', unsafe_allow_html=True)
-st.warning("DEBUG: Working Range section is executing")
 st.markdown(f'{_section("Working Range", C_BLUE)}', unsafe_allow_html=True)
 r1, r2, r3, r4, r5, r6 = st.columns(6, gap="small")
 r1.markdown(_kpi("Buy Levels",   str(_buy_levels),                C_GREEN),  unsafe_allow_html=True)
@@ -571,8 +629,8 @@ fig.add_trace(go.Candlestick(
     open=chart_df["Open"], high=chart_df["High"],
     low=chart_df["Low"], close=chart_df["Close"],
     name="Price",
-    increasing=dict(line=dict(color=C_CYAN, width=1), fillcolor="rgba(0,212,255,0.15)"),
-    decreasing=dict(line=dict(color="#4a5568", width=1), fillcolor="rgba(74,85,104,0.15)"),
+    increasing=dict(line=dict(color=C_PRIMARY, width=1), fillcolor="rgba(0,91,243,0.15)"),
+    decreasing=dict(line=dict(color="#94a3b8" if IS_DARK else "#94a3b8", width=1), fillcolor="rgba(148,163,184,0.1)"),
 ), row=1, col=1)
 
 # Fill markers
@@ -829,7 +887,7 @@ else:
 # ── Footer ───────────────────────────────────────────────────────────────────
 
 st.markdown(
-    '<div class="footer">GRID // BACKTESTER &middot; '
+    '<div class="footer">CICADA GRID BACKTESTER &middot; '
     'Binance USDM Futures via CCXT &middot; '
     'Educational use only &middot; Not financial advice</div>',
     unsafe_allow_html=True,
