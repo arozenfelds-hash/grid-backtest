@@ -13,6 +13,9 @@ import plotly.graph_objects as go
 import streamlit as st
 from plotly.subplots import make_subplots
 
+import base64
+from pathlib import Path
+
 from backtester import run_grid_backtest
 from data_loader import (
     GRID_DEFAULTS,
@@ -21,6 +24,10 @@ from data_loader import (
     get_available_tickers,
     get_display_name,
 )
+
+# ── Logo ─────────────────────────────────────────────────────────────────────
+_LOGO_PATH = Path(__file__).parent / "assets" / "cicada_logo.png"
+_LOGO_B64 = base64.b64encode(_LOGO_PATH.read_bytes()).decode() if _LOGO_PATH.exists() else ""
 
 # ── Page setup ────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -54,14 +61,14 @@ if IS_DARK:
     _PLOT_BG     = "rgba(10,10,10,0.6)"
     _LEGEND_BG   = "rgba(26,26,26,0.95)"
     _GRID_CLR    = "rgba(255,255,255,0.05)"
-    _SIDEBAR_BG  = "linear-gradient(180deg, #0A0A0A 0%, #111111 50%, #0A0A0A 100%)"
+    _SIDEBAR_BG  = "linear-gradient(180deg, #0A0F1A 0%, #0D1117 50%, #0A0A0A 100%)"
     _INPUT_BG    = "rgba(26,26,26,0.9)"
     _KPI_BG      = "#1A1A1A"
     _KPI_BORDER  = "1px solid rgba(255,255,255,0.06)"
-    _HEADER_BG   = "radial-gradient(ellipse at center, #1a1a2e 0%, #0A0A0A 70%)"
+    _HEADER_BG   = "linear-gradient(135deg, #0A0F1A 0%, #111833 40%, #0D1117 100%)"
     _STAT_BG     = "#1A1A1A"
-    _GLOW_A      = "radial-gradient(ellipse 80% 50% at 20% 0%, rgba(45,91,255,0.04) 0%, transparent 60%)"
-    _GLOW_B      = "radial-gradient(ellipse 60% 40% at 80% 100%, rgba(45,91,255,0.02) 0%, transparent 60%)"
+    _GLOW_A      = "radial-gradient(ellipse 80% 50% at 20% 0%, rgba(45,91,255,0.08) 0%, transparent 60%)"
+    _GLOW_B      = "radial-gradient(ellipse 60% 40% at 80% 100%, rgba(45,91,255,0.05) 0%, transparent 60%)"
     _HEAD_CLR    = "#FFFFFF"
     _SEC_CLR     = "#FFFFFF"
     _BODY_CLR    = "rgba(255,255,255,0.65)"
@@ -86,9 +93,9 @@ else:
     _INPUT_BG    = "rgba(255,255,255,0.9)"
     _KPI_BG      = "#FFFFFF"
     _KPI_BORDER  = "1px solid #E5E5E5"
-    _HEADER_BG   = "#FFFFFF"
+    _HEADER_BG   = "linear-gradient(135deg, #FFFFFF 0%, #F0F4FF 60%, #FFFFFF 100%)"
     _STAT_BG     = "#FFFFFF"
-    _GLOW_A      = "none"
+    _GLOW_A      = "radial-gradient(ellipse 80% 50% at 20% 0%, rgba(45,91,255,0.03) 0%, transparent 60%)"
     _GLOW_B      = "none"
     _HEAD_CLR    = "#000000"
     _SEC_CLR     = "#000000"
@@ -139,7 +146,13 @@ html, body, [data-testid="stAppViewContainer"],
 /* Sidebar */
 [data-testid="stSidebar"] {{
     background: {_SIDEBAR_BG} !important;
-    border-right: 1px solid var(--border) !important;
+    border-right: 1px solid {'rgba(45,91,255,0.15)' if IS_DARK else 'rgba(45,91,255,0.12)'} !important;
+}}
+[data-testid="stSidebar"]::before {{
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--primary), #00A3FF);
+    z-index: 10;
 }}
 [data-testid="stSidebar"] [data-testid="stMarkdown"] h1 {{
     font-family: 'Plus Jakarta Sans', sans-serif !important;
@@ -233,18 +246,18 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
 /* Header banner */
 .hdr-banner {{
     background: {_HEADER_BG};
-    border: 1px solid var(--border);
+    border: 1px solid {'rgba(45,91,255,0.15)' if IS_DARK else 'rgba(45,91,255,0.12)'};
     border-radius: 16px;
     padding: 24px 28px 20px;
     margin-bottom: 12px;
     position: relative;
     overflow: hidden;
-    {'box-shadow: 0 1px 3px rgba(0,0,0,0.04);' if not IS_DARK else ''}
+    {'box-shadow: 0 2px 16px rgba(45,91,255,0.06);' if IS_DARK else 'box-shadow: 0 1px 3px rgba(0,0,0,0.04);'}
 }}
 .hdr-banner::before {{
     content: '';
     position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, var(--primary), {C_GREEN});
+    background: linear-gradient(90deg, var(--primary), #00A3FF);
 }}
 .hdr-title {{
     font-family: 'Plus Jakarta Sans', sans-serif;
@@ -290,7 +303,7 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
 .sec-hdr::after {{
     content: '';
     flex: 1; height: 1px;
-    background: linear-gradient(90deg, var(--border), transparent);
+    background: linear-gradient(90deg, {'rgba(45,91,255,0.2)' if IS_DARK else 'rgba(45,91,255,0.15)'}, transparent);
 }}
 .sec-dot {{
     display: inline-block; width: 6px; height: 6px;
@@ -361,7 +374,7 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
 
 /* Buttons */
 .stButton > button[kind="primary"] {{
-    background-color: {'#000000' if not IS_DARK else '#2D5BFF'} !important;
+    background-color: #2D5BFF !important;
     color: #FFFFFF !important;
     border-radius: 100px !important;
     font-family: 'Plus Jakarta Sans', sans-serif !important;
@@ -380,7 +393,7 @@ hr.noir {{ border: none; border-top: 1px solid var(--border); margin: 28px 0; }}
     font-size: 0.7rem; color: var(--muted);
     text-align: center;
     padding: 24px 0 8px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid {'rgba(45,91,255,0.15)' if IS_DARK else 'rgba(45,91,255,0.1)'};
     margin-top: 32px;
 }}
 .conf-notice {{
@@ -443,7 +456,15 @@ def run_cached_backtest(
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.markdown("# cicada. Grid Backtester")
+    st.markdown(f"""
+    <div style="text-align:center; padding: 8px 0 4px;">
+        <img src="data:image/png;base64,{_LOGO_B64}" style="width:160px; margin-bottom:6px;" alt="Cicada">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.65rem; font-weight:600;
+                    letter-spacing:0.15em; text-transform:uppercase; color:{C_MUTED};">
+            Grid Backtester
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     st.caption("Binance USDM Perpetual Futures")
 
     # Theme toggle
@@ -934,10 +955,11 @@ else:
 # ── Footer ───────────────────────────────────────────────────────────────────
 
 st.markdown(
-    '<div class="footer">'
-    '<div>cicada. GRID BACKTESTER &middot; '
-    'Binance USDM Futures via CCXT &middot; Not financial advice</div>'
-    '<div class="conf-notice">Confidential. For internal demonstration purposes.</div>'
-    '</div>',
+    f'<div class="footer">'
+    f'<img src="data:image/png;base64,{_LOGO_B64}" style="width:80px; opacity:0.5; margin-bottom:6px;" alt="Cicada"><br>'
+    f'<div>GRID BACKTESTER &middot; '
+    f'Binance USDM Futures via CCXT &middot; Not financial advice</div>'
+    f'<div class="conf-notice">Confidential. For internal demonstration purposes.</div>'
+    f'</div>',
     unsafe_allow_html=True,
 )
