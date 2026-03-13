@@ -26,8 +26,9 @@ from data_loader import (
 )
 
 # ── Logo ─────────────────────────────────────────────────────────────────────
-_LOGO_PATH = Path(__file__).parent / "assets" / "cicada_logo.png"
-_LOGO_B64 = base64.b64encode(_LOGO_PATH.read_bytes()).decode() if _LOGO_PATH.exists() else ""
+_ASSETS = Path(__file__).parent / "assets"
+_LOGO_WHITE_B64 = base64.b64encode((_ASSETS / "cicada_logo_white.svg").read_bytes()).decode()
+_LOGO_BLUE_B64 = base64.b64encode((_ASSETS / "cicada_logo_blue.svg").read_bytes()).decode()
 
 # ── Page setup ────────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -455,6 +456,8 @@ def run_cached_backtest(
 
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 
+_sidebar_logo_b64 = _LOGO_WHITE_B64 if IS_DARK else _LOGO_BLUE_B64
+
 with st.sidebar:
     st.markdown(f"""
     <div style="text-align:center; padding: 4px 0 0;">
@@ -462,17 +465,14 @@ with st.sidebar:
                     letter-spacing:0.18em; text-transform:uppercase; color:{C_PRIMARY};
                     background:{'rgba(45,91,255,0.08)' if IS_DARK else 'rgba(45,91,255,0.06)'};
                     border:1px solid {'rgba(45,91,255,0.15)' if IS_DARK else 'rgba(45,91,255,0.12)'};
-                    border-radius:100px; padding:4px 14px; display:inline-block; margin-bottom:14px;">
+                    border-radius:100px; padding:4px 14px; display:inline-block; margin-bottom:12px;">
             For internal use only
         </div>
     </div>
     <div style="text-align:center; padding: 0 0 4px;">
-        <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.6rem; font-weight:800;
-                    letter-spacing:0.04em; color:{C_PRIMARY};">
-            cicada<span style="color:{C_PRIMARY}; font-size:0.5em; vertical-align:super;">.</span>
-        </div>
+        <img src="data:image/svg+xml;base64,{_sidebar_logo_b64}" style="width:170px; margin-bottom:4px;" alt="cicada.">
         <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.6rem; font-weight:600;
-                    letter-spacing:0.15em; text-transform:uppercase; color:{C_MUTED}; margin-top:2px;">
+                    letter-spacing:0.15em; text-transform:uppercase; color:{C_MUTED}; margin-top:0;">
             Grid Backtester
         </div>
         <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.55rem; font-weight:400;
@@ -971,8 +971,7 @@ else:
 
 st.markdown(
     f'<div class="footer">'
-    f'<div style="font-family:\'Plus Jakarta Sans\',sans-serif; font-size:1rem; font-weight:800; '
-    f'letter-spacing:0.04em; color:{C_PRIMARY}; opacity:0.5; margin-bottom:4px;">cicada<span style="font-size:0.5em;vertical-align:super;">.</span></div>'
+    f'<img src="data:image/svg+xml;base64,{_sidebar_logo_b64}" style="width:90px; opacity:0.4; margin-bottom:6px;" alt="cicada.">'
     f'<div>GRID BACKTESTER &middot; '
     f'Binance USDM Futures via CCXT &middot; Not financial advice</div>'
     f'<div class="conf-notice">Confidential. For internal demonstration purposes.</div>'
