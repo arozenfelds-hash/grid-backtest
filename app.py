@@ -457,15 +457,30 @@ def run_cached_backtest(
 
 with st.sidebar:
     st.markdown(f"""
-    <div style="text-align:center; padding: 8px 0 4px;">
-        <img src="data:image/png;base64,{_LOGO_B64}" style="width:160px; margin-bottom:6px;" alt="Cicada">
-        <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.65rem; font-weight:600;
-                    letter-spacing:0.15em; text-transform:uppercase; color:{C_MUTED};">
+    <div style="text-align:center; padding: 4px 0 0;">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.55rem; font-weight:600;
+                    letter-spacing:0.18em; text-transform:uppercase; color:{C_PRIMARY};
+                    background:{'rgba(45,91,255,0.08)' if IS_DARK else 'rgba(45,91,255,0.06)'};
+                    border:1px solid {'rgba(45,91,255,0.15)' if IS_DARK else 'rgba(45,91,255,0.12)'};
+                    border-radius:100px; padding:4px 14px; display:inline-block; margin-bottom:14px;">
+            For internal use only
+        </div>
+    </div>
+    <div style="text-align:center; padding: 0 0 4px;">
+        <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:1.6rem; font-weight:800;
+                    letter-spacing:0.04em; color:{C_PRIMARY};">
+            cicada<span style="color:{C_PRIMARY}; font-size:0.5em; vertical-align:super;">.</span>
+        </div>
+        <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.6rem; font-weight:600;
+                    letter-spacing:0.15em; text-transform:uppercase; color:{C_MUTED}; margin-top:2px;">
             Grid Backtester
+        </div>
+        <div style="font-family:'Plus Jakarta Sans',sans-serif; font-size:0.55rem; font-weight:400;
+                    color:{C_MUTED}; opacity:0.7; margin-top:4px;">
+            Binance USDM Perpetual Futures
         </div>
     </div>
     """, unsafe_allow_html=True)
-    st.caption("Binance USDM Perpetual Futures")
 
     # Theme toggle
     _theme_label = "Dark" if IS_DARK else "Light"
@@ -956,7 +971,8 @@ else:
 
 st.markdown(
     f'<div class="footer">'
-    f'<img src="data:image/png;base64,{_LOGO_B64}" style="width:80px; opacity:0.5; margin-bottom:6px;" alt="Cicada"><br>'
+    f'<div style="font-family:\'Plus Jakarta Sans\',sans-serif; font-size:1rem; font-weight:800; '
+    f'letter-spacing:0.04em; color:{C_PRIMARY}; opacity:0.5; margin-bottom:4px;">cicada<span style="font-size:0.5em;vertical-align:super;">.</span></div>'
     f'<div>GRID BACKTESTER &middot; '
     f'Binance USDM Futures via CCXT &middot; Not financial advice</div>'
     f'<div class="conf-notice">Confidential. For internal demonstration purposes.</div>'
