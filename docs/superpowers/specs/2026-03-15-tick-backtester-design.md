@@ -30,8 +30,31 @@ Runs as a systemd service. Collects and stores tick data independently of backte
 - CLI: `python collector.py stream --symbols BTCUSDT,ETHUSDT`
 
 **Smart gap detection:**
-- On startup, scans existing Parquet files for missing days
+- On startup, scans existing Parquet files for missing days and partial days (checks first/last timestamp vs expected 00:00–23:59 UTC range)
 - Auto-downloads gaps from archive before starting live stream
+- Partial-day files are replaced with full archive download when available
+
+**bookTicker availability:**
+- Binance public archive does NOT publish historical bookTicker data
+- bookTicker is only available for periods collected via live WebSocket
+- For historical-only periods, spread-aware execution is automatically disabled; fills use aggTrade price matching instead
+- UI shows a notice when spread-aware mode is selected but bookTicker data is missing for the date range
+
+**Data retention:**
+- Configurable retention period (default: 90 days)
+- Collector prunes files older than retention on daily rotation
+- Disk usage logged on each flush; warning at 80% disk capacity
+
+**Parquet compression:** zstd (best ratio for time-series data, fast decompression)
+
+**Concurrent access safety:**
+- Collector writes to temporary file, then atomic rename to final path
+- Backtester only reads completed files; in-progress flush is invisible
+
+**Health monitoring:**
+- Collector logs a heartbeat every 60 seconds with tick count per symbol
+- If no ticks received for a symbol in 5 minutes, log a warning
+- Status endpoint: `python collector.py status` shows per-symbol last-tick timestamp
 
 **Storage layout:**
 ```
@@ -93,10 +116,32 @@ Cycle-based strategy:
 - `initial_order_size` — first level order in USDT
 - `martingale_factor` — multiplier per level (1.0 = no scaling)
 - `num_levels` — number of limit orders per cycle
-- `price_step` — distance between levels
+- `price_step` — absolute price distance between levels in USDT (e.g., $50 for BTC, $0.5 for altcoins). Same approach as existing grid-backtest.
 - `tp_profit_pct` — take-profit target as % from weighted avg entry
 - `direction` — "long", "short", or "hedge"
 - `leverage` — 1x to 125x
+
+**When all levels are filled and TP not hit:**
+- Position is at maximum size. Strategy holds and waits for TP.
+- No additional orders are placed — the cycle stays open until either TP fills or liquidation occurs.
+- This is the highest-risk state; margin ratio is tracked closely and shown in UI.
+
+**Hedge mode specifics:**
+- Long and short sides run independent cycles with shared wallet balance
+- Margin calculation uses Binance hedge mode rules: each side's margin is calculated independently (gross margining, not net)
+- Both sides can be in different cycle states (e.g., long side has 3/5 levels filled, short side starting fresh cycle)
+
+**Fee model:**
+- Binance futures maker fee: 0.02%, taker fee: 0.04%
+- Limit orders are maker fills (0.02%), TP orders are maker fills (0.02%)
+- Fees deducted from wallet balance (reduces realized PnL)
+- Fee rate is configurable for users with different VIP tiers
+- BNB discount not modeled (can be added later)
+
+**Funding rate:**
+- Not simulated in v1 — results may diverge from live trading for positions held across 8h funding intervals
+- UI displays a warning: "Funding rates not included. Actual results may differ for long-held positions."
+- Listed as future extension
 
 #### Spread-Aware Execution
 
@@ -119,20 +164,26 @@ maint_margin      = position_size × maint_rate
 
 **Binance tiered maintenance margin rates:**
 
-| Position (USDT) | Maint Rate |
-|------------------|-----------|
-| 0 – 50,000 | 0.40% |
-| 50,000 – 250,000 | 0.50% |
-| 250,000 – 1,000,000 | 1.00% |
-| 1,000,000 – 5,000,000 | 2.50% |
-| 5,000,000+ | 5.00% |
+Default rates shown below are for BTCUSDT. Different symbols have different bracket structures. The engine fetches actual brackets per symbol via CCXT `fetchLeverageBrackets()` on first run and caches them locally. Fallback to these defaults if API is unavailable.
+
+| Position (USDT) | Maint Rate | Max Leverage |
+|------------------|-----------|-------------|
+| 0 – 50,000 | 0.40% | 125x |
+| 50,000 – 250,000 | 0.50% | 100x |
+| 250,000 – 1,000,000 | 1.00% | 50x |
+| 1,000,000 – 5,000,000 | 2.50% | 20x |
+| 5,000,000+ | 5.00% | 10x |
+
+**Position size vs leverage limits:** If the martingale grid scales position beyond the max notional for the selected leverage, the engine logs a warning and caps effective leverage at the tier limit. This is shown in the UI.
+
+**Margin mode:** Cross-margin (Binance default). Initial margin uses mark price (aggTrade last price as proxy since mark price isn't in tick data).
 
 **Liquidation condition:** `margin_balance ≤ maint_margin`
 
 When liquidation is detected:
-- Simulation stops (or records and continues if configured)
+- Simulation stops
 - All positions and orders are cancelled
-- Liquidation fee applied (based on Binance's liquidation fee schedule)
+- Liquidation fee: 0.5% of notional (Binance insurance fund fee for futures)
 
 **Liquidation output metrics:**
 - `was_liquidated` (bool)
@@ -180,6 +231,8 @@ Reuses Cicada MM corporate design from grid-backtest. Same fonts, colors, theme 
 
 **Data availability indicator** in sidebar showing which symbols have data, date ranges, and gaps.
 
+**Progress bar** for long backtests — shows ticks processed / total ticks with estimated time remaining.
+
 ## Deployment
 
 **Server:** root@154.83.140.69
@@ -215,15 +268,19 @@ tick-backtester/
     └── cicada_logo_white.svg
 ```
 
+## Python Version
+
+Python 3.11+ required.
+
 ## Dependencies
 
-- ccxt (market info, symbol discovery)
+- ccxt (market info, symbol discovery, leverage brackets)
 - websockets (live data streaming)
 - pandas + pyarrow (Parquet read/write)
 - numpy (calculations)
 - streamlit (UI)
 - plotly (charts)
-- aiohttp or httpx (historical data download)
+- httpx (historical data download)
 
 ## Future Extensions (out of scope for now)
 
